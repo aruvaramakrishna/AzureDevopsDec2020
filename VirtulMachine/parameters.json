@@ -1,0 +1,23 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "Storageaccount": {
+            "value": "azurejansa2021"
+        },
+        "VMName": {
+            "value": "testvm"
+        },
+        "adminUsername": {
+            "value": "azureuser"
+        },
+        "adminPassword": {
+            "reference": {
+              "keyVault": {
+                "id": "/subscriptions/f72e2c44-c9a3-4df7-bd97-f82961c262e1/resourceGroups/powershellrg/providers/Microsoft.KeyVault/vaults/testkv566"
+              },
+              "secretName": "WindowsVMPassword"
+            }
+          }
+    }
+}

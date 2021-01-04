@@ -1,0 +1,92 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "StorageAccount": {
+           "type": "string",
+           "metadata": {
+                "description": "Name of the Storage Account"
+            }
+        }
+    },
+    "variables": {
+        "VirtuanlNetwork": "AzVnet",
+        "Subnet1": "Azsubnet1",
+        "Subnet2": "Azsubnet2",
+        "Subnet3": "Azsubnet3",
+        "Subnet4": "Azsubnet4",
+        "PublicIp": "Azpubip"
+    },
+    "resources": [
+        {
+            "name": "[toLower(parameters('StorageAccount'))]",
+            "type": "Microsoft.Storage/storageAccounts",
+            "apiVersion": "2015-06-15",
+            "location": "[resourceGroup().location]",
+            "tags": {
+                "displayName": "dev"
+            },
+            "properties": {
+                "accountType": "Standard_LRS"
+            }
+        },
+        {
+            "name": "[variables('VirtuanlNetwork')]",
+            "type": "Microsoft.Network/virtualNetworks",
+            "apiVersion": "2018-08-01",
+            "location": "[resourceGroup().location]",
+            "tags": {
+                "displayName": "Dev"
+            },
+            "properties": {
+                "addressSpace": {
+                    "addressPrefixes": [
+                        "10.0.0.0/16"
+                    ]
+                },
+                "subnets": [
+                    {
+                        "name": "[variables('Subnet1')]",
+                        "properties": {
+                            "addressPrefix": "10.0.0.0/24"
+                        }
+                    },
+                     {
+                        "name": "[variables('Subnet2')]",
+                        "properties": {
+                            "addressPrefix": "10.0.1.0/24"
+                        }
+                    },
+                     {
+                        "name": "[variables('Subnet3')]",
+                        "properties": {
+                            "addressPrefix": "10.0.2.0/24"
+                        }
+                    },
+                     {
+                        "name": "[variables('Subnet4')]",
+                        "properties": {
+                            "addressPrefix": "10.0.3.0/24"
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "name": "[variables('PublicIp')]",
+            "type": "Microsoft.Network/publicIPAddresses",
+            "apiVersion": "2019-11-01",
+            "location": "[resourceGroup().location]",
+            "tags": {
+                "displayName": "dev"
+            },
+            "properties": {
+                "publicIPAllocationMethod": "Static",
+                "dnsSettings": {
+                    "domainNameLabel": "azdnsname1"
+                }
+            }
+        }
+    ],
+    "outputs": {}
+}
