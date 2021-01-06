@@ -22,6 +22,30 @@
             "metadata": {
                 "description": "Name for vNet 2"
             }
+        },
+        "VM1": {
+           "type": "string",
+           "metadata": {
+                "description": "Name of the VM1"
+            }
+        },
+        "adminusername": {
+           "type": "string",
+           "metadata": {
+                "description": "description"
+            }
+        },
+        "adminPassword": {
+           "type": "string",
+           "metadata": {
+                "description": "description"
+            }
+        },
+        "VM2": {
+           "type": "string",
+           "metadata": {
+                "description": "description"
+            }
         }
     },
     "variables": {
@@ -36,7 +60,11 @@
             "subnetPrefix": "192.168.0.0/24"
         },
         "vNet1tovNet2PeeringName": "[concat(parameters('vNet1Name'), '-', parameters('vNet2Name'))]",
-        "vNet2tovNet1PeeringName": "[concat(parameters('vNet2Name'), '-', parameters('vNet1Name'))]"
+        "vNet2tovNet1PeeringName": "[concat(parameters('vNet2Name'), '-', parameters('vNet1Name'))]",
+        "StorageAccount": "azuresajan2021",
+        "PublicIP1": "vm1pubip",
+        "NIC1": "vm1nic",
+        "NIC2": "vm2nic"
     },
     "resources": [
             {
@@ -126,6 +154,175 @@
                     }
                 }
             ]
+        },
+        {
+            "name": "[toLower(variables('StorageAccount'))]",
+            "type": "Microsoft.Storage/storageAccounts",
+            "apiVersion": "2015-06-15",
+            "location": "[resourceGroup().location]",
+            "tags": {
+                "displayName": "Storage Account"
+            },
+            "properties": {
+                "accountType": "Standard_LRS"
+            }
+        },
+        {
+            "name": "[variables('PublicIP1')]",
+            "type": "Microsoft.Network/publicIPAddresses",
+            "apiVersion": "2018-08-01",
+            "location": "[resourceGroup().location]",
+            "tags": {
+                "displayName": "PublicIPAddress"
+            },
+            "properties": {
+                "publicIPAllocationMethod": "Dynamic",
+                "dnsSettings": {
+                    "domainNameLabel": "[toLower('azurejan21')]"
+                }
+            }
+        },
+        {
+            "name": "[variables('NIC1')]",
+            "type": "Microsoft.Network/networkInterfaces",
+            "apiVersion": "2018-08-01",
+            "location": "[resourceGroup().location]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/publicIPAddresses', variables('PublicIP1'))]",
+                "[resourceId('Microsoft.Network/virtualNetworks', parameters('vNet1Name'))]"
+            ],
+            "tags": {
+                "displayName": "VM1 Network Interface"
+            },
+            "properties": {
+                "ipConfigurations": [
+                    {
+                        "name": "ipConfig1",
+                        "properties": {
+                            "privateIPAllocationMethod": "Dynamic",
+                            "publicIPAddress": {
+                                "id": "[resourceId('Microsoft.Network/publicIPAddresses', variables('PublicIP1'))]"
+                            },
+                            "subnet": {
+                                "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('vNet1Name'), variables('vNet1').subnetName)]"
+                            }
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "name": "[parameters('VM1')]",
+            "type": "Microsoft.Compute/virtualMachines",
+            "apiVersion": "2017-03-30",
+            "location": "[resourceGroup().location]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Storage/storageAccounts', toLower(variables('StorageAccount')))]",
+                "[resourceId('Microsoft.Network/networkInterfaces', variables('NIC1'))]"
+            ],
+            "tags": {
+                "displayName": "VM1"
+            },
+            "properties": {
+                "hardwareProfile": {
+                    "vmSize": "Standard_DS1_v2"
+                },
+                "osProfile": {
+                    "computerName": "VM1",
+                    "adminUsername": "[parameters('adminusername')]",
+                    "adminPassword": "[parameters('adminPassword')]"
+                },
+                "storageProfile": {
+                    "imageReference": {
+                        "publisher": "MicrosoftWindowsServer",
+                        "offer": "WindowsServer",
+                        "sku": "2016-Datacenter",
+                        "version": "latest"
+                    },
+                    "osDisk": {
+                        "name": "windowsVM01OSDisk",
+                        "caching": "ReadWrite",
+                        "createOption": "FromImage"
+                    }
+                },
+                "networkProfile": {
+                    "networkInterfaces": [
+                        {
+                            "id": "[resourceId('Microsoft.Network/networkInterfaces', variables('NIC1'))]"
+                        }
+                    ]
+                }
+            } 
+        },
+        {
+            "name": "[variables('NIC2')]",
+            "type": "Microsoft.Network/networkInterfaces",
+            "apiVersion": "2018-08-01",
+            "location": "[resourceGroup().location]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/virtualNetworks', parameters('vNet2Name'))]"
+            ],
+            "tags": {
+                "displayName": "VM2 Network Interface"
+            },
+            "properties": {
+                "ipConfigurations": [
+                    {
+                        "name": "ipConfig1",
+                        "properties": {
+                            "privateIPAllocationMethod": "Dynamic",
+                            "subnet": {
+                                "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('vNet2Name'), variables('vNet2').subnetName)]"
+                            }
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "name": "[parameters('VM2')]",
+            "type": "Microsoft.Compute/virtualMachines",
+            "apiVersion": "2017-03-30",
+            "location": "[resourceGroup().location]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Storage/storageAccounts', toLower(variables('StorageAccount')))]",
+                "[resourceId('Microsoft.Network/networkInterfaces', variables('NIC2'))]"
+            ],
+            "tags": {
+                "displayName": "VM2"
+            },
+            "properties": {
+                "hardwareProfile": {
+                    "vmSize": "Standard_DS1_v2"
+                },
+                "osProfile": {
+                    "computerName": "[parameters('VM2')]",
+                    "adminUsername": "[parameters('adminusername')]",
+                    "adminPassword": "[parameters('adminPassword')]"
+                },
+                "storageProfile": {
+                    "imageReference": {
+                        "publisher": "MicrosoftWindowsServer",
+                        "offer": "WindowsServer",
+                        "sku": "2016-Datacenter",
+                        "version": "latest"
+                    },
+                    "osDisk": {
+                        "name": "windowsVM02OSDisk",
+                        "caching": "ReadWrite",
+                        "createOption": "FromImage"
+                    }
+                },
+                "networkProfile": {
+                    "networkInterfaces": [
+                        {
+                            "id": "[resourceId('Microsoft.Network/networkInterfaces', variables('NIC2'))]"
+                        }
+                    ]
+                }
+                
+            }
+          
         }
     ]
 }

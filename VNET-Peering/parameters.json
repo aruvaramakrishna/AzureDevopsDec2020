@@ -8,6 +8,23 @@
         },
         "vNet2Name": {
             "value": "VNET2"
-        }
+        },
+        "VM1": {
+            "value": "vm1"
+        },
+        "adminPassword": {
+            "reference": {
+              "keyVault": {
+                "id": "/subscriptions/f72e2c44-c9a3-4df7-bd97-f82961c262e1/resourceGroups/powershellrg/providers/Microsoft.KeyVault/vaults/testkv566"
+              },
+              "secretName": "WindowsVMPassword"
+            }
+          },
+          "adminusername": {
+              "value": "azureuser"
+          },
+          "VM2": {
+              "value": "vm2"
+          }
     }
 }
